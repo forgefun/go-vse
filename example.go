@@ -1,16 +1,15 @@
 package main
 
 import (
-  "log"
-  // "os"
-
+  log "github.com/Sirupsen/logrus"
   "github.com/cleung2010/go-vse/vse"
   "github.com/joho/godotenv"
 )
 
 func main()  {
-  err := godotenv.Load()
-  if err != nil {
+  log.SetLevel(log.DebugLevel)
+
+  if err := godotenv.Load(); err != nil {
     log.Fatal("Error loading .env file")
   }
 
