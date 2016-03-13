@@ -2,7 +2,7 @@ package main
 
 import (
   "log"
-  "os"
+  // "os"
 
   "github.com/cleung2010/go-vse/vse"
   "github.com/joho/godotenv"
@@ -14,8 +14,11 @@ func main()  {
     log.Fatal("Error loading .env file")
   }
 
-  username := os.Getenv("USERNAME")
-  password := os.Getenv("PASSWORD")
+  client, err := vse.NewClient(vse.DefaultConfig())
+  if err != nil {
+    log.Fatal(err)
+  }
 
-  vse.Authenticate(username, password)
+  portfolio := client.Portfolio("sim101")
+  portfolio.GetHoldings()
 }
