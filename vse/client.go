@@ -4,8 +4,10 @@ import (
   "crypto/tls"
   "encoding/json"
   "fmt"
+  "io"
   "net/http"
   "net/http/cookiejar"
+  "net/url"
   "os"
 
   log "github.com/Sirupsen/logrus"
@@ -94,10 +96,15 @@ func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Re
     Path:   path,
   }
 
-  req, err := http.NewRequest(method, url, body)
+  req, err := http.NewRequest(method, url.RequestURI(), body)
   if err != nil {
     return nil, err
   }
+
+  req.URL.Host = url.Host
+	req.URL.Scheme = url.Scheme
+	req.Host = url.Host
+
   resp, err := c.config.HttpClient.Do(req)
   return resp, err
 }
