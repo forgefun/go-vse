@@ -87,16 +87,20 @@ func NewClient(config *Config) (*Client, error) {
 }
 
 // TODO: func doRequest() to avoid using client.config for http.Client on requests
-// func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Response, error) {
-//   url :=
-//
-//   req, err := http.NewRequest(method, url, body)
-//   if err != nil {
-//     return nil, err
-//   }
-//   resp, err := c.config.HttpClient.Do(req)
-//   return resp, err
-// }
+func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Response, error) {
+  url := &url.URL{
+    Scheme: "https",
+    Host:   "www.marketwatch.com",
+    Path:   path,
+  }
+
+  req, err := http.NewRequest(method, url, body)
+  if err != nil {
+    return nil, err
+  }
+  resp, err := c.config.HttpClient.Do(req)
+  return resp, err
+}
 
 // Perform authentication to get back auth cookies
 func authenticate(config *Config) {
