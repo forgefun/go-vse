@@ -1,10 +1,7 @@
 package vse
 
 import (
-  "bytes"
-  "encoding/json"
   "fmt"
-  "net/http"
   "io"
   "strconv"
   "strings"
@@ -29,19 +26,6 @@ type Holding struct {
 
 type Holdings []*Holding
 
-type Order struct {
-  Fuid   string
-  Shares string
-  Limit  string
-  Stop   string
-  Term   string
-  Type   string
-}
-
-type OrderRequest struct {
-  Collection []Order
-}
-
 func (c *Client) Portfolio(game string) *Portfolio {
   return &Portfolio{
     c: c,
@@ -50,7 +34,7 @@ func (c *Client) Portfolio(game string) *Portfolio {
 }
 
 func (p *Portfolio) GetHoldings() (Holdings, error) {
-  uri := fmt.Sprintf("https://www.marketwatch.com/game/%s/portfolio/Holdings", p.game)
+  uri := fmt.Sprintf("https://www.marketwatch.com/game/%s/portfolio/holdings", p.game)
 
   resp, err := p.c.config.HttpClient.Get(uri)
   if err != nil {
@@ -103,38 +87,4 @@ func (p *Portfolio) GetHoldings() (Holdings, error) {
   })
 
   return holdings, nil
-}
-
-func(p *Portfolio) SubmitOrder(order Order) error {
-  url := fmt.Sprintf("https://www.marketwatch.com/game/%s/trade/submitorder?week=1", p.game)
-
-  // Convert Order to JSON
-  // reqBody := &OrderRequest{}
-  reqBody := append([]Order(nil), order)
-  jsonStr, err := json.Marshal(reqBody)
-  if err != nil {
-    log.Error(err)
-    return err
-  }
-
-  log.Debug(string(jsonStr))
-  // var jsonStr = []byte(`[{Fuid: "STOCK-XNAS-AAPL", Shares: "1", Type: "Buy", Term: "Cancelled"}]`)
-
-  req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-  req.Header.Set("X-Requested-With", "XMLHttpRequest")
-  req.Header.Set("Content-Type", "application/json")
-
-  resp, err := p.c.config.HttpClient.Do(req)
-  if err != nil {
-    return err
-  }
-  defer resp.Body.Close()
-
-  log.Debug(resp.Status)
-
-  return nil
-}
-
-func(p *Portfolio) CancelOrder(symbol string) error {
-  return nil
 }

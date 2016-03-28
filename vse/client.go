@@ -119,5 +119,5 @@ func authenticate(config *Config) {
   checkError(err)
 
   defer resp.Body.Close()
-  defer log.Debug("Authenticaed!")
+  defer log.Debug("Authenticated!")
 }

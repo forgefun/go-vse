@@ -21,12 +21,14 @@ func main()  {
   portfolio := client.Portfolio("sim101")
   portfolio.GetHoldings()
 
-  order := &vse.Order{
-    Fuid: "STOCK-XNAS-AAPL",
-    Shares: "1",
-    Type: "Buy",
-    Term: "Cancelled",
-  }
+  // order := &vse.Order{
+  //   Fuid: "STOCK-XNAS-AAPL",
+  //   Shares: "1",
+  //   Type: "Buy",
+  //   Term: "Cancelled",
+  // }
 
-  portfolio.SubmitOrder(*order)
+  // portfolio.SubmitOrder(*order)
+
+  portfolio.ListOrders()
 }
