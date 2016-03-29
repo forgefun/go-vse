@@ -88,7 +88,7 @@ func NewClient(config *Config) (*Client, error) {
   return client, nil
 }
 
-// TODO: func doRequest() to avoid using client.config for http.Client on requests
+// TODO: Make it also work with POST requests
 func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Response, error) {
   url := &url.URL{
     Scheme: "https",
@@ -100,6 +100,12 @@ func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Re
   if err != nil {
     return nil, err
   }
+
+  // Set header if body if is not nil
+  // if body != nil {
+  //   req.Header.Set("Content-Type", "application/json")
+  //   req.Header.Set("X-Requested-With", "XMLHttpRequest")
+  // }
 
   req.URL.Host = url.Host
 	req.URL.Scheme = url.Scheme

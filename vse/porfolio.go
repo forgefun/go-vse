@@ -36,7 +36,6 @@ func (c *Client) Portfolio(game string) *Portfolio {
 func (p *Portfolio) GetHoldings() (Holdings, error) {
   path := fmt.Sprintf("/game/%s/portfolio/holdings", p.game)
 
-  // resp, err := p.c.config.HttpClient.Get(uri)
   resp, err := p.c.doRequest("GET", path, nil)
   if err != nil {
     return nil, err

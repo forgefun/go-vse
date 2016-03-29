@@ -39,9 +39,9 @@ type PendingOrder struct {
 type PendingOrders []*PendingOrder
 
 func(p *Portfolio) ListOrders() (PendingOrders, error) {
-  uri := fmt.Sprintf("https://www.marketwatch.com/game/%s/portfolio/orders", p.game)
+  path := fmt.Sprintf("/game/%s/portfolio/orders", p.game)
 
-  resp, err := p.c.config.HttpClient.Get(uri)
+  resp, err := p.c.doRequest("GET", path, nil)
   if err != nil {
     return nil, err
   }
@@ -53,7 +53,6 @@ func(p *Portfolio) ListOrders() (PendingOrders, error) {
     return nil, err
   }
 
-  // var po []*PendingOrders
   var pendingOrders []*PendingOrder
 
   // TODO: Gracefully handle errors
@@ -92,6 +91,7 @@ func(p *Portfolio) ListOrders() (PendingOrders, error) {
 
 func(p *Portfolio) SubmitOrder(order Order) error {
   url := fmt.Sprintf("https://www.marketwatch.com/game/%s/trade/submitorder?week=1", p.game)
+  // path := fmt.Sprintf("/game/%s/trade/submitorder?week=1", p.game)
 
   // Convert Order to JSON
   reqBody := append([]Order(nil), order)
@@ -105,15 +105,23 @@ func(p *Portfolio) SubmitOrder(order Order) error {
   // var jsonStr = []byte(`[{Fuid: "STOCK-XNAS-AAPL", Shares: "1", Type: "Buy", Term: "Cancelled"}]`)
 
   req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-  req.Header.Set("X-Requested-With", "XMLHttpRequest")
+  // req.Header.Set("X-Requested-With", "XMLHttpRequest")
   req.Header.Set("Content-Type", "application/json")
 
   resp, err := p.c.config.HttpClient.Do(req)
   if err != nil {
     return err
   }
+
+  // resp, err := p.c.doRequest("POST", path, bytes.NewBuffer(jsonStr))
+  // if err != nil {
+  //   return err
+  // }
+
   defer resp.Body.Close()
 
+  log.Debug(req)
+  log.Debug(resp)
   log.Debug(resp.Status)
 
   return nil
