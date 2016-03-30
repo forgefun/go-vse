@@ -5,7 +5,6 @@ import(
   "encoding/json"
   "fmt"
   "io"
-  "net/http"
   "net/url"
   "strconv"
   "strings"
@@ -89,9 +88,9 @@ func(p *Portfolio) ListOrders() (PendingOrders, error) {
   return pendingOrders, nil
 }
 
+// Example request body: [{Fuid: "STOCK-XNAS-AAPL", Shares: "1", Type: "Buy", Term: "Cancelled"}]
 func(p *Portfolio) SubmitOrder(order Order) error {
-  url := fmt.Sprintf("https://www.marketwatch.com/game/%s/trade/submitorder?week=1", p.game)
-  // path := fmt.Sprintf("/game/%s/trade/submitorder?week=1", p.game)
+  path := fmt.Sprintf("/game/%s/trade/submitorder", p.game)
 
   // Convert Order to JSON
   reqBody := append([]Order(nil), order)
@@ -102,27 +101,13 @@ func(p *Portfolio) SubmitOrder(order Order) error {
   }
 
   log.Debug(string(jsonStr))
-  // var jsonStr = []byte(`[{Fuid: "STOCK-XNAS-AAPL", Shares: "1", Type: "Buy", Term: "Cancelled"}]`)
 
-  req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-  // req.Header.Set("X-Requested-With", "XMLHttpRequest")
-  req.Header.Set("Content-Type", "application/json")
-
-  resp, err := p.c.config.HttpClient.Do(req)
+  resp, err := p.c.doRequest("POST", path, bytes.NewBuffer(jsonStr))
   if err != nil {
     return err
   }
 
-  // resp, err := p.c.doRequest("POST", path, bytes.NewBuffer(jsonStr))
-  // if err != nil {
-  //   return err
-  // }
-
   defer resp.Body.Close()
-
-  log.Debug(req)
-  log.Debug(resp)
-  log.Debug(resp.Status)
 
   return nil
 }

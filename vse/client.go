@@ -88,7 +88,7 @@ func NewClient(config *Config) (*Client, error) {
   return client, nil
 }
 
-// TODO: Make it also work with POST requests
+// TODO: Make it also work with query parameters
 func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Response, error) {
   url := &url.URL{
     Scheme: "https",
@@ -102,10 +102,9 @@ func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Re
   }
 
   // Set header if body if is not nil
-  // if body != nil {
-  //   req.Header.Set("Content-Type", "application/json")
-  //   req.Header.Set("X-Requested-With", "XMLHttpRequest")
-  // }
+  if body != nil {
+    req.Header.Set("Content-Type", "application/json")
+  }
 
   req.URL.Host = url.Host
 	req.URL.Scheme = url.Scheme
