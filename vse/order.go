@@ -112,6 +112,14 @@ func(p *Portfolio) SubmitOrder(order Order) error {
   return nil
 }
 
-func(p *Portfolio) CancelOrder(symbol string) error {
+func(p *Portfolio) CancelOrder(id string) error {
+  uri := fmt.Sprintf("https://marketwatch.com/game/%s/trade/cancelorder?id=%s", p.game, id)
+  resp, err := p.c.config.HttpClient.Get(uri)
+  if err != nil {
+    return err
+  }
+
+  defer resp.Body.Close()
+
   return nil
 }
