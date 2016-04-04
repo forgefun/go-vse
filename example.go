@@ -2,7 +2,7 @@ package main
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/cleung2010/go-vse/vse"
+	"github.com/forgefun/go-vse/vse"
 	"github.com/joho/godotenv"
 )
 
