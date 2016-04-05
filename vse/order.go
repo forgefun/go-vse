@@ -1,8 +1,6 @@
 package vse
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
@@ -37,10 +35,16 @@ type PendingOrder struct {
 
 type PendingOrders []*PendingOrder
 
+type CancelOrderParams struct {
+	Id string `url:id,omitempty`
+}
+
 func (p *Portfolio) ListOrders() (PendingOrders, error) {
 	path := fmt.Sprintf("/game/%s/portfolio/orders", p.game)
 
-	resp, err := p.c.doRequest("GET", path, nil)
+	req := p.c.newRequest("GET", path, nil)
+
+	resp, err := p.c.doRequest(req)
 	if err != nil {
 		return nil, err
 	}
@@ -91,18 +95,14 @@ func (p *Portfolio) ListOrders() (PendingOrders, error) {
 // Example request body: [{Fuid: "STOCK-XNAS-AAPL", Shares: "1", Type: "Buy", Term: "Cancelled"}]
 func (p *Portfolio) SubmitOrder(order Order) error {
 	path := fmt.Sprintf("/game/%s/trade/submitorder", p.game)
+	reqObj := append([]Order(nil), order)
 
-	// Convert Order to JSON
-	reqBody := append([]Order(nil), order)
-	jsonStr, err := json.Marshal(reqBody)
-	if err != nil {
-		log.Error(err)
-		return err
-	}
+	req := p.c.newRequest("POST", path, nil)
+	req.obj = reqObj
 
-	log.Debug(string(jsonStr))
+	log.Debug("%v", req)
 
-	resp, err := p.c.doRequest("POST", path, bytes.NewBuffer(jsonStr))
+	resp, err := p.c.doRequest(req)
 	if err != nil {
 		return err
 	}
@@ -113,8 +113,24 @@ func (p *Portfolio) SubmitOrder(order Order) error {
 }
 
 func (p *Portfolio) CancelOrder(id string) error {
-	uri := fmt.Sprintf("https://marketwatch.com/game/%s/trade/cancelorder?id=%s", p.game, id)
-	resp, err := p.c.config.HttpClient.Get(uri)
+	// uri := fmt.Sprintf("https://marketwatch.com/game/%s/trade/cancelorder?id=%s", p.game, id)
+	// resp, err := p.c.config.HttpClient.Get(uri)
+	// if err != nil {
+	// 	return err
+	// }
+
+	path := fmt.Sprintf("/game/%s/trade/cancelorder", p.game)
+
+	// TODO: Constructing params can be refactored
+	params := &url.Values{}
+	params.Set("id", id)
+
+	req := p.c.newRequest("GET", path, nil)
+	req.params = *params
+
+	log.Debug(req.params)
+
+	resp, err := p.c.doRequest(req)
 	if err != nil {
 		return err
 	}

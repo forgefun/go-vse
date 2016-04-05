@@ -1,6 +1,7 @@
 package vse
 
 import (
+	"bytes"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,11 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
+const (
+	defaultScheme  = "https"
+	defaultAddress = "www.marketwatch.com"
+)
+
 type AuthResponse struct {
 	Username string `json:"username"`
 	Url      string `json:"url"`
@@ -23,6 +29,8 @@ type AuthResponse struct {
 }
 
 type Config struct {
+	Scheme     string
+	Address    string
 	HttpClient *http.Client
 	Username   string
 	Password   string
@@ -32,11 +40,21 @@ type Client struct {
 	config Config
 }
 
+type request struct {
+	method string
+	url    *url.URL
+	params url.Values
+	body   io.Reader
+	obj    interface{}
+}
+
 // Default configuration for the client
 func DefaultConfig() *Config {
 	// Create cookie jar`
 	jar, err := cookiejar.New(nil)
-	checkError(err)
+	if err != nil {
+		log.Warn("Cannot create cookie jar: %s", err)
+	}
 
 	// Set transport to accept unsecure cert due to SSL on the site
 	transport := &http.Transport{
@@ -44,6 +62,8 @@ func DefaultConfig() *Config {
 	}
 
 	config := &Config{
+		Scheme: defaultScheme,
+		Address: defaultAddress,
 		HttpClient: &http.Client{
 			Jar:       jar,
 			Transport: transport,
@@ -88,34 +108,56 @@ func NewClient(config *Config) (*Client, error) {
 	return client, nil
 }
 
-// TODO: Make it also work with query parameters
-func (c *Client) doRequest(method string, path string, body io.Reader) (*http.Response, error) {
-	url := &url.URL{
-		Scheme: "https",
-		Host:   "www.marketwatch.com",
-		Path:   path,
+func (c *Client) newRequest(method string, path string, params map[string][]string) *request {
+	r := &request{
+		method: method,
+		url:    &url.URL{
+							Scheme: c.config.Scheme,
+							Host:   c.config.Address,
+							Path:   path,
+		},
+		params: params,
+	}
+	return r
+}
+
+func (c *Client) doRequest(r *request) (*http.Response, error) {
+	// Encode query parameters
+	r.url.RawQuery = r.params.Encode()
+
+	// Encode body if object exists and not encoded yet
+	if r.body == nil && r.obj != nil {
+		buf := bytes.NewBuffer(nil)
+		enc := json.NewEncoder(buf)
+		if err := enc.Encode(r.obj); err != nil {
+			return nil, err
+		}
+		r.body = buf
 	}
 
-	req, err := http.NewRequest(method, url.RequestURI(), body)
+	// Create HTTP request
+	req, err := http.NewRequest(r.method, r.url.RequestURI(), r.body)
 	if err != nil {
 		return nil, err
 	}
 
-	// Set header if body if is not nil
-	if body != nil {
+	req.URL.Scheme = r.url.Scheme
+	req.URL.Host = r.url.Host
+	req.Host = r.url.Host
+
+	// Add application/json header if body is not empty
+	if r.body != nil {
 		req.Header.Set("Content-Type", "application/json")
 	}
 
-	req.URL.Host = url.Host
-	req.URL.Scheme = url.Scheme
-	req.Host = url.Host
+	log.Debug(r.url.RequestURI())
 
 	resp, err := c.config.HttpClient.Do(req)
 	return resp, err
 }
 
 // Perform authentication to get back auth cookies
-func authenticate(config *Config) {
+func authenticate(config *Config) error {
 	log.Debug("Authenticating...")
 
 	client := config.HttpClient
@@ -124,16 +166,24 @@ func authenticate(config *Config) {
 
 	// Hit login to get url back from the response
 	resp, err := client.Get(uri)
-	checkError(err)
+	if err != nil {
+		return err
+	}
 
 	// Decode the body into struct
 	err = json.NewDecoder(resp.Body).Decode(&respBody)
-	checkError(err)
+	if err != nil {
+		return err
+	}
 
 	// GET request to the url in the JSON response from id.marketwatch.com
 	resp, err = client.Get(respBody.Url)
-	checkError(err)
+	if err != nil {
+		return nil
+	}
 
 	defer resp.Body.Close()
 	defer log.Debug("Authenticated!")
+
+	return nil
 }

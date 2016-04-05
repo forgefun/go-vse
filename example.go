@@ -19,16 +19,26 @@ func main() {
 	}
 
 	portfolio := client.Portfolio("sim101")
-	portfolio.GetHoldings()
+	if _, err := portfolio.GetHoldings(); err != nil {
+		log.Fatal(err)
+	}
 
 	order := &vse.Order{
-		Fuid:   "STOCK-XNAS-AAPL",
+		Fuid:   "STOCK-XASQ-AA",
 		Shares: "1",
 		Type:   "Buy",
 		Term:   "Cancelled",
 	}
 
-	portfolio.SubmitOrder(*order)
+	if err := portfolio.SubmitOrder(*order); err != nil{
+		log.Fatal(err)
+	}
 
-	portfolio.ListOrders()
+	// if err := portfolio.CancelOrder("80916009"); err != nil {
+	// 	log.Fatal(err)
+	// }
+
+	if _, err := portfolio.ListOrders(); err != nil {
+		log.Fatal(err)
+	}
 }
