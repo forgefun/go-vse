@@ -21,9 +21,7 @@ type Order struct {
 	Type   string
 }
 
-type OrderRequest struct {
-	Collection []Order
-}
+type OrderRequest []Order
 
 type PendingOrder struct {
 	Id     string
@@ -95,7 +93,9 @@ func (p *Portfolio) ListOrders() (PendingOrders, error) {
 // Example request body: [{Fuid: "STOCK-XNAS-AAPL", Shares: "1", Type: "Buy", Term: "Cancelled"}]
 func (p *Portfolio) SubmitOrder(order Order) error {
 	path := fmt.Sprintf("/game/%s/trade/submitorder", p.game)
-	reqObj := append([]Order(nil), order)
+
+	reqObj := append(OrderRequest{}, order)
+	log.Debug(reqObj)
 
 	req := p.c.newRequest("POST", path, nil)
 	req.obj = reqObj
@@ -113,12 +113,6 @@ func (p *Portfolio) SubmitOrder(order Order) error {
 }
 
 func (p *Portfolio) CancelOrder(id string) error {
-	// uri := fmt.Sprintf("https://marketwatch.com/game/%s/trade/cancelorder?id=%s", p.game, id)
-	// resp, err := p.c.config.HttpClient.Get(uri)
-	// if err != nil {
-	// 	return err
-	// }
-
 	path := fmt.Sprintf("/game/%s/trade/cancelorder", p.game)
 
 	// TODO: Constructing params can be refactored

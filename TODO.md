@@ -7,5 +7,7 @@
   * [x] doRequest() should better handle requests other than GET
 * [ ] Unit tests
   * [ ] CI with Travis
+  * [ ] Use mock server with, potentially with gorilla/mux
 * [ ] Document source for readability in godoc
 * [ ] Use godeps to cache dependency in source. No leftpad shenanigans
+* [ ] Clean up  and improve logging
