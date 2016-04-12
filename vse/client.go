@@ -62,7 +62,7 @@ func DefaultConfig() *Config {
 	}
 
 	config := &Config{
-		Scheme: defaultScheme,
+		Scheme:  defaultScheme,
 		Address: defaultAddress,
 		HttpClient: &http.Client{
 			Jar:       jar,
@@ -83,14 +83,18 @@ func DefaultConfig() *Config {
 
 // Creates new VSE client that is authenticated
 func NewClient(config *Config) (*Client, error) {
+	if config == nil {
+		return nil, fmt.Errorf("No configuration provided")
+	}
+
 	// Bootstrap default config
 	defConfig := DefaultConfig()
 
-	if config.Username == "" {
+	if len(config.Username) == 0 {
 		config.Username = defConfig.Username
 	}
 
-	if config.Password == "" {
+	if len(config.Password) == 0 {
 		config.Password = defConfig.Password
 	}
 
@@ -111,10 +115,10 @@ func NewClient(config *Config) (*Client, error) {
 func (c *Client) newRequest(method string, path string, params map[string][]string) *request {
 	r := &request{
 		method: method,
-		url:    &url.URL{
-							Scheme: c.config.Scheme,
-							Host:   c.config.Address,
-							Path:   path,
+		url: &url.URL{
+			Scheme: c.config.Scheme,
+			Host:   c.config.Address,
+			Path:   path,
 		},
 		params: params,
 	}

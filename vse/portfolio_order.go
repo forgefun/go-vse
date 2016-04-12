@@ -90,7 +90,9 @@ func (p *Portfolio) ListOrders() (PendingOrders, error) {
 	return pendingOrders, nil
 }
 
+// Available prefixes: STOCK-XNAS-, EXCHANGETRADEDFUND-XASQ-
 // Example request body: [{Fuid: "STOCK-XNAS-AAPL", Shares: "1", Type: "Buy", Term: "Cancelled"}]
+// TODO: Handle case where there is not enough buying power to process order
 func (p *Portfolio) SubmitOrder(order Order) error {
 	path := fmt.Sprintf("/game/%s/trade/submitorder", p.game)
 
