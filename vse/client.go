@@ -102,14 +102,42 @@ func NewClient(config *Config) (*Client, error) {
 		config.HttpClient = defConfig.HttpClient
 	}
 
-	//Perform authentication with the config
-	authenticate(config)
-
 	client := &Client{
 		config: *config,
 	}
 
 	return client, nil
+}
+
+// Perform authentication to get back auth cookies
+func (c *Client) Authenticate() error {
+	log.Debug("Authenticating...")
+
+	uri := fmt.Sprintf("https://id.marketwatch.com/auth/submitlogin.json?username=%s&password=%s", c.config.Username, c.config.Password)
+	respBody := AuthResponse{}
+
+	// Hit login to get url back from the response
+	resp, err := c.config.HttpClient.Get(uri)
+	if err != nil {
+		return err
+	}
+
+	// Decode the body into struct
+	err = json.NewDecoder(resp.Body).Decode(&respBody)
+	if err != nil {
+		return err
+	}
+
+	// GET request to the url in the JSON response from id.marketwatch.com
+	resp, err = c.config.HttpClient.Get(respBody.Url)
+	if err != nil {
+		return nil
+	}
+
+	defer resp.Body.Close()
+	defer log.Debug("Authenticated!")
+
+	return nil
 }
 
 func (c *Client) newRequest(method string, path string, params map[string][]string) *request {
@@ -158,36 +186,4 @@ func (c *Client) doRequest(r *request) (*http.Response, error) {
 
 	resp, err := c.config.HttpClient.Do(req)
 	return resp, err
-}
-
-// Perform authentication to get back auth cookies
-func authenticate(config *Config) error {
-	log.Debug("Authenticating...")
-
-	client := config.HttpClient
-	uri := fmt.Sprintf("https://id.marketwatch.com/auth/submitlogin.json?username=%s&password=%s", config.Username, config.Password)
-	respBody := AuthResponse{}
-
-	// Hit login to get url back from the response
-	resp, err := client.Get(uri)
-	if err != nil {
-		return err
-	}
-
-	// Decode the body into struct
-	err = json.NewDecoder(resp.Body).Decode(&respBody)
-	if err != nil {
-		return err
-	}
-
-	// GET request to the url in the JSON response from id.marketwatch.com
-	resp, err = client.Get(respBody.Url)
-	if err != nil {
-		return nil
-	}
-
-	defer resp.Body.Close()
-	defer log.Debug("Authenticated!")
-
-	return nil
 }

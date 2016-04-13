@@ -18,6 +18,11 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = client.Authenticate()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	portfolio := client.Portfolio("sim101")
 	if _, err := portfolio.GetHoldings(); err != nil {
 		log.Fatal(err)
@@ -30,7 +35,7 @@ func main() {
 		Term:   "Cancelled",
 	}
 
-	if err := portfolio.SubmitOrder(*order); err != nil{
+	if err := portfolio.SubmitOrder(*order); err != nil {
 		log.Fatal(err)
 	}
 

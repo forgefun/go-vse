@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -45,11 +46,26 @@ func testMethod(t *testing.T, r *http.Request, want string) {
 }
 
 func TestDefaultConfig_env(t *testing.T) {
-	os.Setenv("USERNAME", "test_user")
-	os.Setenv("PASSWORD", "test_password")
+	os.Setenv("USERNAME", testUsername)
+	os.Setenv("PASSWORD", testPassword)
+	defer os.Unsetenv("USERNAME")
+	defer os.Unsetenv("PASSWORD")
+
+	client, err := NewClient(DefaultConfig())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if strings.Compare(client.config.Username, testUsername) != 0 {
+		t.Fatalf("Expected: %s, Got: %s", client.config.Username, testUsername)
+	}
+
+	if strings.Compare(client.config.Password, testPassword) != 0 {
+		t.Fatalf("Expected: %s, Got: %s", client.config.Password, testPassword)
+	}
 }
 
-func TestNewClient(t *testing.T) {
+func TestNewClientDefaultConfig(t *testing.T) {
 	// New client with default config
 	c, err := NewClient(DefaultConfig())
 	if err != nil {
@@ -59,8 +75,7 @@ func TestNewClient(t *testing.T) {
 	// Default config
 	config := DefaultConfig()
 
-	t.Log(reflect.DeepEqual(c.config, config))
-	if !reflect.DeepEqual(c.config, config) {
-		t.Errorf("Client's default config: %v, default config: %v", &c.config, config)
+	if !reflect.DeepEqual(c.config.HttpClient, config.HttpClient) {
+		t.Errorf("Client's default config: %+v, default config: %+v", c.config, config)
 	}
 }
